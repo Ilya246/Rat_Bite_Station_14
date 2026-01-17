@@ -3,6 +3,7 @@ using Content.Shared.Anomaly;
 using Content.Shared.Damage.Prototypes;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 
 namespace Content.Goobstation.Shared.CorticalBorer.Components;
 
@@ -37,13 +38,14 @@ public sealed partial class DarkPresenceComponent : Component
     public ProtoId<DamageTypePrototype> AllowedDamage = "Holy";
 
     [DataField]
-    public List<AnomalousParticleType> AllowedParticleTypes = [ AnomalousParticleType.Delta, AnomalousParticleType.Epsilon, AnomalousParticleType.Zeta, AnomalousParticleType.Sigma ];
+    public List<AnomalousParticleType> AllowedParticleTypes = new() { AnomalousParticleType.Delta, AnomalousParticleType.Epsilon, AnomalousParticleType.Zeta, AnomalousParticleType.Sigma };
 
     [DataField]
     public AnomalousParticleType DamagingType; // chosen on init
 }
 
-public enum DarkPresenceStage
+[Serializable, NetSerializable]
+public enum DarkPresenceStage : Byte
 {
     Begin,
     Percent50,
