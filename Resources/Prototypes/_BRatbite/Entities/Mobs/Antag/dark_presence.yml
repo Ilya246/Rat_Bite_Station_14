@@ -1,0 +1,129 @@
+- type: entity
+  parent: BaseMob
+  id: MobDarkPresenceBase
+  name: dark presence
+  description: Takes control.
+  suffix: Ghostrole
+  abstract: true
+  components:
+  - type: CombatMode
+    combatToggleAction: ActionCombatModeToggleOff
+  - type: Actions
+  - type: GhostRole
+    makeSentient: true
+    allowSpeech: False
+    allowMovement: true
+    name: dark-presence-ghostrole-name
+    description: dark-presence-ghostrole-desc
+    rules: ghost-role-information-antagonist-rules
+    mindRoles:
+    - MindRoleGhostRoleSoloAntagonist
+    raffle:
+      settings: default
+  - type: GhostTakeoverAvailable
+  - type: Sprite
+    sprite: _BRatBites/Entities/Mobs/Antag/dark_presence.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: dark-presence
+  - type: MovementSpeedModifier
+    baseWalkSpeed : 1.9
+    baseSprintSpeed : 4.2
+  - type: CorticalBorer
+  - type: DarkPresence
+
+- type: entity
+  parent: [MobDarkPresenceBase, SimpleSpaceMobBase]
+  id: MobDarkPresence
+  components:
+  - type: UserInterface
+    interfaces:
+      enum.HealthAnalyzerUiKey.Key:
+        type: HealthAnalyzerBoundUserInterface
+  - type: CollectiveMind
+    defaultChannel: CorticalBorer
+    channels:
+    - CorticalBorer
+  - type: Speech
+    enabled: false
+  - type: HealthAnalyzer
+    scanningEndSound:
+      path: "/Audio/Voice/Slime/slime_squish.ogg"
+    maxScanRange: .5
+  - type: Body
+    thermalVisibility: false
+  - type: UniversalLanguageSpeaker
+  - type: ActionGrant
+    actions:
+    - ActionCheckBlood
+    - ActionDarkPresenceDamageHost
+    - ActionDarkPresenceMuteHost
+    - ActionDarkPresenceEvolve
+  - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Dead
+
+- type: entity
+  parent: MobDarkPresenceBase
+  id: MobDarkPresenceSelector
+  suffix: Selector
+  components:
+  - type: Input
+    context: "ghost"
+  - type: Visibility
+    layer: 2
+  - type: ContentEye
+    maxZoom: 1.44,1.44
+  - type: Eye
+    drawFov: false
+    visMask:
+    - Ghost
+    - Normal
+  - type: MovementSpeedModifier
+    baseWalkSpeed : 4
+    baseSprintSpeed : 10
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 15
+        layer:
+        - GhostImpassable
+  - type: FTLSmashImmune
+  - type: MovementIgnoreGravity
+  - type: Physics
+    bodyType: KinematicController
+    bodyStatus: InAir
+  - type: CanMoveInAir
+  - type: CargoSellBlacklist
+  - type: NoSlip
+  - type: CorticalBorer
+    infestPrototype: MobDarkPresence
+  - type: ActionGrant
+    actions:
+    - ActionCorticalBorerInfest
+
+- type: entity
+  parent: BaseAntagSpawner
+  id: SpawnPointDarkPresence
+  name: ghost role spawn point
+  suffix: dark presence
+  components:
+  - type: GhostRole
+    name: dark-presence-ghostrole-name
+    description: dark-presence-ghostrole-desc
+    rules: ghost-role-information-antagonist-rules
+    mindRoles:
+    - MindRoleGhostRoleSoloAntagonist
+    raffle:
+      settings: default
+  - type: Sprite
+    sprite: Markers/jobs.rsi
+    layers:
+    - state: green
+    - sprite: _BRatBites/Entities/Mobs/Antag/dark_presence.rsi
+      state: dark-presence

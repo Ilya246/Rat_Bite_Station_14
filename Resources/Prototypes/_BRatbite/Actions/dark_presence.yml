@@ -1,0 +1,74 @@
+- type: entity
+  id: ActionDarkPresenceEvolve
+  name: Evolve
+  description: Evolve, if you have completed your objectives.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon:
+      sprite: _Mono/Interface/Actions/borer.rsi
+      state: borer_egg
+    itemIconStyle: NoItem
+    event: !type:DarkPresenceEvolveEvent
+      actionProtos:
+      - ActionCorticalBorerEject
+      - ActionControlHost
+      - ActionDarkPresenceHealHost
+
+- type: entity
+  id: ActionDarkPresenceMuteHost
+  name: Mute Host
+  description: Temporarily mute your host.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon: /Textures/Interface/Alerts/Abilities/silenced.png
+    itemIconStyle: NoItem
+    useDelay: 15
+    event: !type:DarkPresenceMuteHostEvent
+      duration: 20
+
+- type: entity
+  id: ActionDarkPresenceDamageHost
+  name: Damage Host
+  description: Damage your host.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon: /Textures/_BRatBites/Interface/Actions/dark_presence/damage.png
+    itemIconStyle: NoItem
+    useDelay: 5
+    event: !type:DarkPresenceDamageHostEvent
+      amount:
+        types:
+          Blunt: 25
+
+- type: entity
+  id: ActionDarkPresenceHealHost
+  name: Heal Host
+  description: Heal your host.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon: /Textures/_BRatBites/Interface/Actions/dark_presence/heal.png
+    itemIconStyle: NoItem
+    useDelay: 5
+    event: !type:DarkPresenceDamageHostEvent
+      amount:
+        groups:
+          Burn: -20
+          Toxin: -20
+          Airloss: -20
+          Brute: -30
+
+- type: entity
+  id: ActionDarkPresenceTakeControl
+  name: Heal Host
+  description: Take full control of your host, after a long time.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon: /Textures/Mobs/Species/Human/organs.rsi/brain.png
+    itemIconStyle: NoItem
+    useDelay: 5
+    event: !type:DarkPresenceTakeControlEvent

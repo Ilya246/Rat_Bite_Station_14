@@ -1,0 +1,70 @@
+- type: entity
+  id: ActionCorticalBorerInfest
+  name: Infest
+  description: Infest target Humanoid. Target host must have a bloodstream.
+  components:
+  - type: EntityTargetAction
+    canTargetSelf: false
+    checkCanInteract: false
+    icon:
+      sprite: _Mono/Interface/Actions/borer.rsi
+      state: borer_chem
+    itemIconStyle: NoItem
+    whitelist:
+      components:
+      - Body
+    event: !type:CorticalInfestEvent
+
+- type: entity
+  id: ActionCheckBlood
+  name: Check Blood
+  description: Inspect the blood of your host to see how they are doing.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon:
+      sprite: _Mono/Interface/Actions/borer.rsi
+      state: borer_bloodcheck
+    itemIconStyle: NoItem
+    useDelay: 5
+    event: !type:CorticalCheckBloodEvent
+
+- type: entity
+  id: ActionCorticalBorerEject
+  name: Eject Host
+  description: Eject yourself from your host.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon:
+      sprite: _Mono/Interface/Actions/borer.rsi
+      state: borer_eject
+    itemIconStyle: NoItem
+    event: !type:CorticalEjectEvent
+
+- type: entity
+  id: ActionControlHost
+  name: Take Control
+  description: Take full control of your host.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon:
+      sprite: _Mono/Interface/Actions/borer.rsi
+      state: borer_control
+    itemIconStyle: NoItem
+    useDelay: 300 # 5 minutes
+    event: !type:CorticalTakeControlEvent
+
+- type: entity
+  id: ActionEndControlHost
+  name: Relinquish Control
+  description: Give up hold of the host's body early.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon:
+      sprite: _Mono/Interface/Actions/borer.rsi
+      state: borer_eject
+    itemIconStyle: NoItem
+    event: !type:CorticalEndControlEvent
