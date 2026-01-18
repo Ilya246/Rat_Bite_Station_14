@@ -12,7 +12,7 @@
     event: !type:DarkPresenceEvolveEvent
       actionProtos:
       - ActionCorticalBorerEject
-      - ActionControlHost
+      - ActionDarkPresenceTakeControl
       - ActionDarkPresenceHealHost
       - ActionDarkPresenceReattach
 
