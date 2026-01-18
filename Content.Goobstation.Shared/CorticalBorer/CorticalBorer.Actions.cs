@@ -27,6 +27,9 @@ public sealed partial class DarkPresenceDamageHostEvent : InstantActionEvent
 {
     [DataField(required: true)]
     public DamageSpecifier Amount;
+
+    [DataField]
+    public SoundSpecifier? Sound = new SoundPathSpecifier("/Audio/Effects/gib1.ogg");
 }
 
 public sealed partial class DarkPresenceMuteHostEvent : InstantActionEvent
@@ -42,4 +45,10 @@ public sealed partial class DarkPresenceTakeControlEvent : InstantActionEvent
     /// </summary>
     [DataField(required: true)]
     public TimeSpan Duration = TimeSpan.FromMinutes(5);
+}
+
+public sealed partial class DarkPresenceReattachEvent : InstantActionEvent
+{
+    [DataField]
+    public float Range = 1f;
 }

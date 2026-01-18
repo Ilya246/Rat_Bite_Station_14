@@ -1,10 +1,15 @@
+using System.Linq;
 using Content.Goobstation.Common.Changeling;
 using Content.Goobstation.Shared.CorticalBorer;
 using Content.Goobstation.Shared.CorticalBorer.Components;
 using Content.Goobstation.Shared.Devil;
 using Content.Goobstation.Shared.SlaughterDemon;
 using Content.Server.Body.Components;
+using Content.Shared._Shitmed.Damage;
+using Content.Shared._Shitmed.Targeting;
+using Content.Shared.Body.Part;
 using Content.Shared.DoAfter;
+using Content.Shared.Hands.Components;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -33,6 +38,7 @@ public sealed partial class CorticalBorerSystem
         SubscribeLocalEvent<DarkPresenceComponent, DarkPresenceDamageHostEvent>(OnDarkDamageHost);
         SubscribeLocalEvent<DarkPresenceComponent, DarkPresenceMuteHostEvent>(OnDarkMuteHost);
         SubscribeLocalEvent<DarkPresenceComponent, DarkPresenceTakeControlEvent>(OnDarkTakeControl);
+        SubscribeLocalEvent<DarkPresenceComponent, DarkPresenceReattachEvent>(OnDarkReattach);
     }
 
     private void OnInfest(Entity<CorticalBorerComponent> ent, ref CorticalInfestEvent args)
@@ -107,6 +113,12 @@ public sealed partial class CorticalBorerSystem
         if (!HasComp<BloodstreamComponent>(target) || HasComp<CorticalBorerComponent>(target))
             return;
 
+        if (TryComp<DarkPresenceComponent>(ent, out var dark) && !TerminatingOrDeleted(dark.ReinfestAction))
+        {
+            Actions.RemoveAction(ent, dark.ReinfestAction);
+            dark.ReinfestAction = null;
+        }
+
         InfestTarget(ent, target);
         args.Handled = true;
     }
@@ -179,8 +191,6 @@ public sealed partial class CorticalBorerSystem
 
     private void OnEndControl(Entity<CorticalBorerInfestedComponent> host, ref CorticalEndControlEvent args)
     {
-        return; // Ratbite - remove and properly handle for dark presence if cortical borer ported
-
         if (args.Handled)
             return;
 
@@ -213,8 +223,21 @@ public sealed partial class CorticalBorerSystem
         foreach (var protoId in args.ActionProtos)
             Actions.AddAction(ent, protoId);
 
-        Popup.PopupEntity(Loc.GetString("dark-presence-evolved"), ent, ent, PopupType.Large);
+        // grant a hand
+        EnsureComp<HandsComponent>(ent);
+        var hand = Spawn("LeftHandHuman");
+        var part = Comp<BodyPartComponent>(hand);
 
+        var attachAt = _body.GetBodyChildrenOfType(ent, BodyPartType.Arm).FirstOrDefault();
+        if (attachAt == default)
+            attachAt = _body.GetBodyChildren(ent).First();
+
+        var slotId = $"{part.Symmetry.ToString().ToLower()} {part.GetHashCode().ToString()}";
+        part.SlotId = part.GetHashCode().ToString();
+
+        _body.TryCreatePartSlotAndAttach(attachAt.Id, slotId, hand, BodyPartType.Hand, BodyPartSymmetry.Right, attachAt.Component, part);
+
+        Popup.PopupEntity(Loc.GetString("dark-presence-evolved"), ent, ent, PopupType.Large);
         args.Handled = true;
     }
 
@@ -229,7 +252,10 @@ public sealed partial class CorticalBorerSystem
             return;
         }
 
-        _damageable.TryChangeDamage(hostUid, args.Amount, true, ignoreBlockers: true, canMiss: false);
+        _damageable.TryChangeDamage(hostUid, args.Amount, true, targetPart: TargetBodyPart.All, ignoreBlockers: true, splitDamage: SplitDamageBehavior.SplitEnsureAll, canMiss: false);
+
+        Audio.PlayEntity(args.Sound, ent, ent);
+        Audio.PlayEntity(args.Sound, hostUid, ent);
 
         args.Handled = true;
     }
@@ -272,7 +298,33 @@ public sealed partial class CorticalBorerSystem
             ent.Comp.TakeControlTime = args.Duration;
         }
 
-
         args.Handled = true;
+    }
+
+    private void OnDarkReattach(Entity<DarkPresenceComponent> ent, ref DarkPresenceReattachEvent args)
+    {
+        if (!TryComp<CorticalBorerComponent>(ent, out var borer))
+            return;
+
+        if (borer.Host != null)
+        {
+            Popup.PopupEntity(Loc.GetString("dark-presence-reattach-in-host"), ent, ent, PopupType.SmallCaution);
+            return;
+        }
+
+        if (ent.Comp.OriginalHost is not { } host || TerminatingOrDeleted(host))
+        {
+            Popup.PopupEntity(Loc.GetString("dark-presence-reattach-no-host"), ent, ent, PopupType.MediumCaution);
+            return;
+        }
+
+        if (!Transform(host).Coordinates.TryDistance(EntityManager, Transform(ent).Coordinates, out var distance)
+            || distance > args.Range)
+        {
+            Popup.PopupEntity(Loc.GetString("dark-presence-reattach-too-far"), ent, ent, PopupType.SmallCaution);
+            return;
+        }
+
+        InfestTarget((ent, borer), host);
     }
 }

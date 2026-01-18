@@ -28,11 +28,17 @@ public sealed partial class DarkPresenceComponent : Component
     [DataField]
     public float OutsideAccumulator = 0f;
 
+    [DataField]
+    public EntityUid? OriginalHost = null;
+
     /// <summary>
     /// How long to be outside of a host to be able to infect another.
     /// </summary>
     [DataField]
-    public TimeSpan ReinfectThreshold = TimeSpan.FromMinutes(5);
+    public TimeSpan ReinfestThreshold = TimeSpan.FromMinutes(5);
+
+    [DataField]
+    public EntityUid? ReinfestAction = null;
 
     [DataField]
     public ProtoId<DamageTypePrototype> AllowedDamage = "Holy";

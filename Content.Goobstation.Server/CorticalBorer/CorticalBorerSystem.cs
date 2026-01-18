@@ -2,6 +2,7 @@ using Content.Goobstation.Shared.CorticalBorer;
 using Content.Goobstation.Shared.CorticalBorer.Components;
 using Content.Server.Anomaly.Components;
 using Content.Server.Body.Components;
+using Content.Server.Body.Systems;
 using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Server.DoAfter;
@@ -10,6 +11,7 @@ using Content.Server.Ghost.Roles;
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.Medical;
 using Content.Server.Medical.Components;
+using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Chat;
 using Content.Shared.Damage;
@@ -30,16 +32,17 @@ namespace Content.Goobstation.Server.CorticalBorer;
 
 public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly HealthAnalyzerSystem _analyzer = default!;
+    [Dependency] private readonly BodySystem _body = default!;
+    [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly DoAfterSystem _doAfter = default!;
+    [Dependency] private readonly GhostRoleSystem _ghostRole = default!;
+    [Dependency] private readonly GhostSystem _ghost = default!;
+    [Dependency] private readonly HealthAnalyzerSystem _analyzer = default!;
+    [Dependency] private readonly IChatManager _chat = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly ISharedAdminLogManager _admin = default!;
     [Dependency] private readonly SharedMindSystem _mind = default!;
-    [Dependency] private readonly IChatManager _chat = default!;
-    [Dependency] private readonly GhostSystem _ghost  = default!;
-    [Dependency] private readonly GhostRoleSystem _ghostRole  = default!;
     [Dependency] private readonly SharedObjectivesSystem _objective = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly StatusEffectsSystem _status = default!;
 
     public override void Initialize()
@@ -72,10 +75,15 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
             if (borer.Host is not { } host)
             {
                 dark.OutsideAccumulator += frameTime;
-                if (dark.OutsideAccumulator > dark.ReinfectThreshold.TotalSeconds)
+                if (dark.OutsideAccumulator > dark.ReinfestThreshold.TotalSeconds)
                 {
                     // does nothing if action exists
-                    Actions.AddAction(uid, borer.InfestAction);
+                    if (TryComp<ActionsComponent>(uid, out var actions)
+                        && (dark.ReinfestAction is not { } reinfest
+                            || !actions.Actions.Contains(reinfest))
+                        )
+                        dark.ReinfestAction = Actions.AddAction(uid, borer.InfestAction, component: actions);
+
                     dark.OutsideAccumulator = 0f;
                 }
 
@@ -99,8 +107,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
 
             switch (dark.Stage)
             {
-                case (DarkPresenceStage.Begin):
-                {
+                case DarkPresenceStage.Begin:
                     if (progress >= 0.5f)
                     {
                         Popup.PopupEntity(Loc.GetString("dark-presence-takeover-50"), host, host, PopupType.LargeCaution);
@@ -108,9 +115,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
                         dark.Stage = DarkPresenceStage.Percent50;
                     }
                     break;
-                }
-                case (DarkPresenceStage.Percent50):
-                {
+                case DarkPresenceStage.Percent50:
                     if (progress >= 0.75f)
                     {
                         Popup.PopupEntity(Loc.GetString("dark-presence-takeover-75"), host, host, PopupType.LargeCaution);
@@ -118,15 +123,12 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
                         dark.Stage = DarkPresenceStage.Percent75;
                     }
                     break;
-                }
-                case (DarkPresenceStage.Percent75):
-                {
+                case DarkPresenceStage.Percent75:
                     if (progress >= 1f)
                     {
                         TakeControlHost((uid, borer), Comp<CorticalBorerInfestedComponent>(host), true);
                     }
                     break;
-                }
             }
         }
     }
@@ -223,7 +225,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
             _ghostRole.UnregisterGhostRole((worm, ghostRole)); // prevent players from taking the worm role once mind isn't in the worm
 
         // add the end control and vomit egg action
-        if (Actions.AddAction(host, ent.Comp.EndControlAction) is {} actionEnd)
+        if (Actions.AddAction(host, ent.Comp.EndControlAction) is { } actionEnd)
             infestedComp.RemoveAbilities.Add(actionEnd);
 
         if (TryComp<ReformComponent>(host, out var reformComp) && reformComp.ActionEntity.HasValue)
@@ -286,6 +288,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
 
     private void OnMindRemoved(Entity<CorticalBorerComponent> ent, ref MindRemovedMessage args)
     {
+        return; // Ratbite - remove and properly handle for dark presence if cortical borer ported
         if (!ent.Comp.ControlingHost)
             TryEjectBorer(ent); // No storing them in hosts if you don't have a soul
     }
@@ -295,7 +298,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
         if (!args.DamageIncreased)
             return;
 
-        if (args.DamageDelta is not {} delta)
+        if (args.DamageDelta is not { } delta)
             return;
 
         var borer = ent.Comp.Borer;
@@ -303,7 +306,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
             return;
 
         // passthrough all damage from correct particle or all holy damage
-        if (args.Origin is {} origin
+        if (args.Origin is { } origin
             && TryComp<AnomalousParticleComponent>(origin, out var particle)
             && particle.ParticleType == presence.DamagingType)
         {

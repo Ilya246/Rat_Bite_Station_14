@@ -16,3 +16,12 @@ dark-presence-takeover-presence-begin = You begin trying to completely take over
 dark-presence-takeover-presence-cancel = You are no longer trying to completely take over.
 dark-presence-takeover-50 = The takeover is 50% done!
 dark-presence-takeover-75 = The takeover is 75% done!
+
+dark-presence-reattach-in-host = You are already in a host.
+dark-presence-reattach-no-host = You have no existing host!
+dark-presence-reattach-too-far = Too far!
+
+cortical-borer-infest-borer = You infest the target.
+cortical-borer-infest-host = A dark presence takes over you!
+
+cortical-borer-death = The dark presence ejects and dies.

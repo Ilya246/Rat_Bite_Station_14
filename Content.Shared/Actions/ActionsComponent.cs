@@ -15,7 +15,7 @@ namespace Content.Shared.Actions;
 
 [NetworkedComponent]
 [RegisterComponent]
-[Access(typeof(SharedActionsSystem))]
+[Access(typeof(SharedActionsSystem), Other = AccessPermissions.ReadExecute)] // Ratbite
 public sealed partial class ActionsComponent : Component
 {
     /// <summary>

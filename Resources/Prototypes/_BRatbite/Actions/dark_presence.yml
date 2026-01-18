@@ -14,6 +14,7 @@
       - ActionCorticalBorerEject
       - ActionControlHost
       - ActionDarkPresenceHealHost
+      - ActionDarkPresenceReattach
 
 - type: entity
   id: ActionDarkPresenceMuteHost
@@ -63,7 +64,7 @@
 
 - type: entity
   id: ActionDarkPresenceTakeControl
-  name: Heal Host
+  name: Control Host
   description: Take full control of your host, after a long time.
   components:
   - type: InstantAction
@@ -72,3 +73,15 @@
     itemIconStyle: NoItem
     useDelay: 5
     event: !type:DarkPresenceTakeControlEvent
+
+- type: entity
+  id: ActionDarkPresenceReattach
+  name: Reattach to Host
+  description: Instantly reattach to your host if outside and near.
+  components:
+  - type: InstantAction
+    checkCanInteract: false
+    icon: /Textures/Mobs/Species/Human/organs.rsi/brain.png
+    itemIconStyle: NoItem
+    event: !type:DarkPresenceReattachEvent
+

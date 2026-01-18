@@ -1,3 +1,4 @@
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -38,4 +39,31 @@ public sealed partial class CorticalBorerComponent : Component
     /// </summary>
     [DataField]
     public EntProtoId? InfestPrototype = null;
+
+    [DataField]
+    public SoundSpecifier? InfestSound = new SoundPathSpecifier("/Audio/Effects/gib1.ogg");
+
+    [DataField]
+    public LocId? InfestPopupBorer = "cortical-borer-infest-borer";
+
+    [DataField]
+    public LocId? InfestPopupHost = "cortical-borer-infest-host";
+
+    [DataField]
+    public SoundSpecifier? DeathSound = new SoundPathSpecifier("/Audio/Effects/gib1.ogg");
+
+    [DataField]
+    public LocId? DeathPopup = "cortical-borer-death";
+
+    /// <summary>
+    /// For how long to stun the host on infest.
+    /// </summary>
+    [DataField]
+    public TimeSpan InfestStunDuration = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// For how long to stun the host on eject.
+    /// </summary>
+    [DataField]
+    public TimeSpan EjectStunDuration = TimeSpan.FromSeconds(5);
 }

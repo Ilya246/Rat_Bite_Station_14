@@ -6,7 +6,9 @@ using Content.Shared.MedicalScanner;
 using Content.Shared.Mind;
 using Content.Shared.Mobs;
 using Content.Shared.Popups;
+using Content.Shared.Stunnable;
 using Content.Shared.Weapons.Melee.Events;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -16,17 +18,18 @@ namespace Content.Goobstation.Shared.CorticalBorer;
 
 public abstract class SharedCorticalBorerSystem : EntitySystem
 {
-    [Dependency] private readonly ISerializationManager _serManager = default!;
     [Dependency] private readonly DamageableSystem _damage = default!;
+    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private readonly ISerializationManager _serManager = default!;
     [Dependency] private readonly SharedMindSystem _mind = default!;
+    [Dependency] private readonly SharedStunSystem _stun = default!;
 
+    [Dependency] protected readonly IPrototypeManager Proto = default!;
+    [Dependency] protected readonly SharedActionsSystem Actions = default!;
+    [Dependency] protected readonly SharedAudioSystem Audio = default!;
+    [Dependency] protected readonly SharedContainerSystem Container = default!;
     [Dependency] protected readonly SharedPopupSystem Popup = default!;
     [Dependency] protected readonly SharedUserInterfaceSystem UI = default!;
-    [Dependency] protected readonly SharedActionsSystem Actions = default!;
-    [Dependency] protected readonly SharedContainerSystem Container = default!;
-    [Dependency] protected readonly IPrototypeManager Proto = default!;
-
-    [Dependency] private readonly IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -67,7 +70,13 @@ public abstract class SharedCorticalBorerSystem : EntitySystem
     {
         // eject us if we die in host
         if (args.NewMobState != MobState.Alive)
+        {
             TryEjectBorer(ent);
+
+            Audio.PlayPvs(ent.Comp.DeathSound, ent);
+            if (ent.Comp.DeathPopup is { } popup)
+                Popup.PopupEntity(Loc.GetString(popup), ent, PopupType.Large);
+        }
     }
 
     public void InfestTarget(Entity<CorticalBorerComponent> ent, EntityUid target)
@@ -126,13 +135,23 @@ public abstract class SharedCorticalBorerSystem : EntitySystem
             }
         }
 
+        Audio.PlayEntity(ent.Comp.InfestSound, ent, ent);
+        Audio.PlayEntity(ent.Comp.InfestSound, target, ent);
+        if (ent.Comp.InfestPopupBorer is { } popupBorer)
+            Popup.PopupEntity(Loc.GetString(popupBorer), ent, ent, PopupType.LargeCaution);
+        if (ent.Comp.InfestPopupHost is { } popupHost)
+            Popup.PopupEntity(Loc.GetString(popupHost), ent, target, PopupType.LargeCaution);
+
+        if (ent.Comp.InfestStunDuration.TotalSeconds != 0)
+            _stun.TryStun(target, ent.Comp.InfestStunDuration, true);
+
         if (TryComp<DamageableComponent>(ent, out var damComp))
             _damage.SetAllDamage(ent, damComp, 0);
     }
 
     public bool TryEjectBorer(Entity<CorticalBorerComponent> ent)
     {
-        if (!ent.Comp.Host.HasValue)
+        if (ent.Comp.Host is not { } host)
             return false;
 
         if (TerminatingOrDeleted(ent.Owner))
@@ -171,6 +190,12 @@ public abstract class SharedCorticalBorerSystem : EntitySystem
                 RemCompDeferred(ent, compReg.Component.GetType());
             }
         }
+
+        if (TryComp<DarkPresenceComponent>(ent, out var dark))
+            dark.OriginalHost = host;
+
+        if (ent.Comp.EjectStunDuration.TotalSeconds != 0)
+            _stun.TryStun(host, ent.Comp.EjectStunDuration, true);
 
         return true;
     }
