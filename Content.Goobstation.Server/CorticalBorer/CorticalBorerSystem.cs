@@ -88,6 +88,7 @@ public sealed partial class CorticalBorerSystem : SharedCorticalBorerSystem
                 }
 
                 dark.TakeControlAccumulator = 0f;
+                dark.TakeControlTime = null;
                 continue;
             }
             else

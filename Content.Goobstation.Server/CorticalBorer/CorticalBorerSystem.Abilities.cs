@@ -11,6 +11,7 @@ using Content.Shared.Body.Part;
 using Content.Shared.DoAfter;
 using Content.Shared.Hands.Components;
 using Content.Shared.IdentityManagement;
+using Content.Shared.Interaction.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
@@ -225,7 +226,8 @@ public sealed partial class CorticalBorerSystem
 
         // grant a hand
         EnsureComp<HandsComponent>(ent);
-        var hand = Spawn("LeftHandHuman");
+        EnsureComp<ComplexInteractionComponent>(ent);
+        var hand = Spawn("LeftHandHuman", Transform(ent).Coordinates);
         var part = Comp<BodyPartComponent>(hand);
 
         var attachAt = _body.GetBodyChildrenOfType(ent, BodyPartType.Arm).FirstOrDefault();
@@ -235,7 +237,8 @@ public sealed partial class CorticalBorerSystem
         var slotId = $"{part.Symmetry.ToString().ToLower()} {part.GetHashCode().ToString()}";
         part.SlotId = part.GetHashCode().ToString();
 
-        _body.TryCreatePartSlotAndAttach(attachAt.Id, slotId, hand, BodyPartType.Hand, BodyPartSymmetry.Right, attachAt.Component, part);
+        if (!_body.TryCreatePartSlotAndAttach(attachAt.Id, slotId, hand, BodyPartType.Hand, BodyPartSymmetry.Right, attachAt.Component, part))
+            QueueDel(hand);
 
         Popup.PopupEntity(Loc.GetString("dark-presence-evolved"), ent, ent, PopupType.Large);
         args.Handled = true;
@@ -278,8 +281,14 @@ public sealed partial class CorticalBorerSystem
 
     private void OnDarkTakeControl(Entity<DarkPresenceComponent> ent, ref DarkPresenceTakeControlEvent args)
     {
-        if (args.Handled || !TryComp<CorticalBorerComponent>(ent, out var borer) || borer.Host is not { } host)
+        if (args.Handled || !TryComp<CorticalBorerComponent>(ent, out var borer))
             return;
+
+        if (borer.Host is not { } host)
+        {
+            Popup.PopupEntity(Loc.GetString("cortical-borer-no-host"), ent, ent, PopupType.Medium);
+            return;
+        }
 
         // cancel if active
         var active = ent.Comp.TakeControlTime != null;

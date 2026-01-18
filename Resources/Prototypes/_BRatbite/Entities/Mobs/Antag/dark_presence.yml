@@ -26,7 +26,7 @@
       state: dark-presence
   - type: MovementSpeedModifier
     baseWalkSpeed : 1.9
-    baseSprintSpeed : 4.2
+    baseSprintSpeed : 4.5
   - type: CorticalBorer
   - type: DarkPresence
 
