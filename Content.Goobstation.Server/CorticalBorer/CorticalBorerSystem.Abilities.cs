@@ -234,7 +234,7 @@ public sealed partial class CorticalBorerSystem
         if (attachAt == default)
             attachAt = _body.GetBodyChildren(ent).First();
 
-        var slotId = $"{part.Symmetry.ToString().ToLower()} {part.GetHashCode().ToString()}";
+        var slotId = $"{_body.GetSlotFromBodyPart(part)} {part.GetHashCode().ToString()}";
         part.SlotId = part.GetHashCode().ToString();
 
         if (!_body.TryCreatePartSlotAndAttach(attachAt.Id, slotId, hand, BodyPartType.Hand, BodyPartSymmetry.Right, attachAt.Component, part))
