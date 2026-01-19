@@ -194,6 +194,7 @@
     - id: DuoAbductorSpawn # Shitmed - Starlight Abductors
     - id: BingleSpawn #Goobstation - Bingle
     - id: SlaughterDemonMidround # Goobstation - Slaughter Demon
+    - id: DarkPresenceSpawn # Ratbite - Dark Presence
 
 - type: entity
   id: BaseStationEvent
